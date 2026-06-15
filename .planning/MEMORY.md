@@ -356,3 +356,34 @@ req.end();
   Stage 1 (3주) → Stage 2 (4주) → Stage 3 (8주) → Stage 4 (10주) = 25주
   [시드] → [요구] → [설계] → [구현]
   ```
+
+---
+
+## Phase 2 — ERD 설계 & 웹페이지 매핑 (2026-06-15)
+
+### 핵심 학습
+1. **K-DUO-LINK 스키마 원격 분석**: `gh api repos/aptimerp/K-DUO-LINK/contents/{path}` + base64 디코딩으로 migration SQL 읽기 — 로컬 클론 없이 완전 분석 가능
+2. **K-DUO-LINK base64 디코딩 워크어라운드 (PowerShell)**:
+   ```powershell
+   gh api repos/aptimerp/K-DUO-LINK/contents/{path} -q ".content" | Out-File "b64.txt" -Encoding ascii
+   $raw = (Get-Content "b64.txt" -Raw).Trim() -replace '\r\n','' -replace '\n',''
+   [IO.File]::WriteAllBytes("output.sql", [Convert]::FromBase64String($raw))
+   ```
+3. **3원 시스템 경계 원칙**: Supabase(수주전) / ERP(수주후) / 그룹웨어(전자결재) — ERD 설계의 근본 원칙으로 확정
+4. **전자결재 통합 전략**: delivery_requests, design_requests, site_transfers 3개 테이블 삭제 → approval_tracking 1개로 통합 (양식은 그룹웨어, 상태만 추적)
+5. **ERP 연계 필드 설계**: companies.erp_company_code, projects.erp_site_code (NULL=수주전, 값=ERP등록완료) — 데이터 생명주기 추적의 핵심
+6. **K-DUO-LINK 테이블명 우선**: users→profiles, sites→projects, activities→meeting_logs (K-DUO-LINK이 이미 운영 중이므로 기존 이름 유지)
+
+### 결정사항
+- **ERD v2.0 확정**: 25개 Supabase 테이블 + 6개 ERP READ-ONLY VIEW
+- **공유 테이블 6개**: profiles, companies, contacts, projects, meeting_logs, meeting_log_action_items (K-DUO-LINK과 동일 DB)
+- **approval_tracking**: type(출고의뢰/설계의뢰/현장이관) × status(미발행/발행/승인) — 그룹웨어 연동 추적
+- **웹페이지 ~42개 매핑**: Supabase CRUD(25) + 전자결재추적(4) + ERP조회(7) + 집계(6)
+- **개발 4단계 우선순위**: 핵심파이프라인 → 수주후관리 → 보고분석 → ERP연동
+- **메뉴 추가**: 영업관리>주간보고, 수주관리>전자결재현황, 채권관리>정산
+- **기성청구서**: 건설사별 양식 상이 → 핵심 데이터만 웹, 원본은 엑셀 다운로드
+- **수주확정보고서 VBA**: JSONB 컬럼으로 웹 시뮬레이션 (10시트 → 웹 폼)
+
+### 재사용 패턴
+- **ERD HTML 도식 템플릿**: 색상코딩(파랑=공유, 초록=EX전용, 호박=전자결재, 회색=ERP) + 줌 컨트롤 + 드래그 + 생명주기 배지
+- **데이터소스 분류 기호**: 🔵Supabase / 🟡전자결재 / ⚪ERP API / 🟢집계

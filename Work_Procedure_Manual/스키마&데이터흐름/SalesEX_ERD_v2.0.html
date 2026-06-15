@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SalesEX ERD v2.0 (rev.1)</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:#f8f9fa;overflow:hidden;height:100vh}
+#toolbar{position:fixed;top:0;left:0;right:0;height:52px;background:#fff;border-bottom:1px solid #dee2e6;display:flex;align-items:center;padding:0 16px;z-index:100;gap:12px;flex-wrap:wrap}
+#toolbar h1{font-size:14px;font-weight:700;color:#212529}
+#toolbar .legend{display:flex;gap:10px;margin-left:16px}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:11px;color:#495057}
+.legend-dot{width:10px;height:10px;border-radius:2px}
+.dot-shared{background:#3b82f6}
+.dot-ex{background:#10b981}
+.dot-approval{background:#f59e0b}
+.dot-erp{background:#6b7280}
+#toolbar .zoom-controls{margin-left:auto;display:flex;gap:4px}
+#toolbar button{padding:3px 8px;border:1px solid #dee2e6;background:#fff;border-radius:4px;cursor:pointer;font-size:11px}
+#toolbar button:hover{background:#f1f3f5}
+#canvas-wrapper{position:absolute;top:52px;left:0;right:0;bottom:0;overflow:auto;cursor:grab}
+#canvas-wrapper:active{cursor:grabbing}
+#canvas{position:relative;width:2400px;height:2600px;transform-origin:0 0}
+.tbl{position:absolute;background:#fff;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.12);font-size:11px;overflow:hidden;border:1px solid #e5e7eb}
+.tbl-header{padding:5px 10px;color:#fff;font-weight:700;font-size:11.5px;letter-spacing:.3px}
+.tbl-header.shared{background:#3b82f6}
+.tbl-header.ex{background:#10b981}
+.tbl-header.approval{background:#f59e0b}
+.tbl-header.erp{background:#6b7280}
+.tbl-body{padding:3px 0}
+.col-row{display:flex;align-items:center;padding:1.5px 8px;gap:5px;border-bottom:1px solid #f3f4f6}
+.col-row:last-child{border-bottom:none}
+.col-icon{font-size:8.5px;width:14px;text-align:center;flex-shrink:0}
+.col-icon.pk{color:#f59e0b;font-weight:700}
+.col-icon.fk{color:#8b5cf6}
+.col-name{flex:1;color:#374151;font-size:10.5px}
+.col-type{color:#9ca3af;font-size:9.5px;flex-shrink:0}
+.col-note{color:#6b7280;font-size:9px;font-style:italic}
+.area-label{position:absolute;font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.8px}
+.area-box{position:absolute;border:1.5px dashed #e5e7eb;border-radius:8px;background:rgba(249,250,251,.5)}
+svg.lines{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+svg.lines line{stroke:#cbd5e1;stroke-width:1.2}
+svg.lines .fk-line{stroke-dasharray:4,3}
+svg.lines marker path{fill:#94a3b8}
+.lifecycle-badge{position:absolute;font-size:9px;padding:2px 6px;border-radius:10px;font-weight:600;white-space:nowrap}
+.badge-pre{background:#dbeafe;color:#1d4ed8}
+.badge-post{background:#fef3c7;color:#92400e}
+.badge-erp{background:#e5e7eb;color:#374151}
+.info-badge{position:absolute;bottom:6px;right:16px;font-size:10px;color:#adb5bd}
+.flow-box{position:absolute;background:#fff;border:2px solid #e5e7eb;border-radius:8px;padding:10px 14px;font-size:10px;color:#6b7280;line-height:1.5}
+.flow-box b{color:#374151}
+</style>
+</head>
+<body>
+<div id="toolbar">
+  <h1>SalesEX ERD v2.0</h1>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot dot-shared"></div>K-DUO-LINK 공유</div>
+    <div class="legend-item"><div class="legend-dot dot-ex"></div>EX 전용</div>
+    <div class="legend-item"><div class="legend-dot dot-approval"></div>전자결재 추적</div>
+    <div class="legend-item"><div class="legend-dot dot-erp"></div>ERP VIEW</div>
+  </div>
+  <div class="zoom-controls">
+    <button onclick="setZoom(0.5)">50%</button>
+    <button onclick="setZoom(0.7)">70%</button>
+    <button onclick="setZoom(1)">100%</button>
+    <button onclick="setZoom(1.25)">125%</button>
+  </div>
+</div>
+<div id="canvas-wrapper">
+<div id="canvas">
+
+<!-- ===== SVG LINES ===== -->
+<svg class="lines" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="arrow" viewBox="0 0 6 6" refX="6" refY="3" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L6,3 L0,6 Z"/></marker></defs>
+<!-- companies → contacts -->
+<line x1="370" y1="230" x2="500" y2="310" marker-end="url(#arrow)" class="fk-line"/>
+<!-- companies → projects -->
+<line x1="280" y1="230" x2="140" y2="310" marker-end="url(#arrow)" class="fk-line"/>
+<!-- projects → meeting_logs -->
+<line x1="220" y1="510" x2="420" y2="310" marker-end="url(#arrow)" class="fk-line"/>
+<!-- contacts → meeting_logs -->
+<line x1="520" y1="440" x2="490" y2="310" marker-end="url(#arrow)" class="fk-line"/>
+<!-- meeting_logs → action_items -->
+<line x1="540" y1="510" x2="700" y2="350" marker-end="url(#arrow)" class="fk-line"/>
+<!-- projects → pre_sales -->
+<line x1="120" y1="510" x2="80" y2="610" marker-end="url(#arrow)" class="fk-line"/>
+<!-- projects → site_briefings -->
+<line x1="200" y1="510" x2="310" y2="610" marker-end="url(#arrow)" class="fk-line"/>
+<!-- projects → quotes -->
+<line x1="140" y1="510" x2="100" y2="870" marker-end="url(#arrow)" class="fk-line" opacity="0.3"/>
+<!-- quotes → quote_items -->
+<line x1="210" y1="1030" x2="370" y2="880" marker-end="url(#arrow)" class="fk-line"/>
+<!-- quotes → quote_costs -->
+<line x1="210" y1="1030" x2="590" y2="880" marker-end="url(#arrow)" class="fk-line"/>
+<!-- quotes → bids -->
+<line x1="100" y1="1060" x2="100" y2="1120" marker-end="url(#arrow)" class="fk-line"/>
+<!-- bids → bid_histories -->
+<line x1="230" y1="1280" x2="370" y2="1130" marker-end="url(#arrow)" class="fk-line"/>
+<!-- bids → orders -->
+<line x1="100" y1="1310" x2="140" y2="1380" marker-end="url(#arrow)" class="fk-line"/>
+<!-- orders → order_items -->
+<line x1="270" y1="1560" x2="420" y2="1390" marker-end="url(#arrow)" class="fk-line"/>
+<!-- orders → order_confirmations -->
+<line x1="270" y1="1560" x2="660" y2="1390" marker-end="url(#arrow)" class="fk-line"/>
+<!-- orders → approval_tracking -->
+<line x1="270" y1="1560" x2="940" y2="1390" marker-end="url(#arrow)" class="fk-line"/>
+<!-- orders → claims -->
+<line x1="140" y1="1590" x2="100" y2="1660" marker-end="url(#arrow)" class="fk-line"/>
+<!-- orders → receivables -->
+<line x1="200" y1="1590" x2="350" y2="1660" marker-end="url(#arrow)" class="fk-line"/>
+<!-- orders → guarantees -->
+<line x1="270" y1="1590" x2="610" y2="1660" marker-end="url(#arrow)" class="fk-line"/>
+<!-- orders → settlements -->
+<line x1="140" y1="1870" x2="100" y2="1930" marker-end="url(#arrow)" class="fk-line"/>
+<!-- competitors → assets -->
+<line x1="1050" y1="220" x2="1050" y2="310" marker-end="url(#arrow)" class="fk-line"/>
+<!-- weekly → items -->
+<line x1="520" y1="2070" x2="700" y2="1930" marker-end="url(#arrow)" class="fk-line"/>
+</svg>
+
+<!-- ===== DATA LIFECYCLE FLOW (Right side) ===== -->
+<div class="flow-box" style="left:930px;top:60px;width:430px">
+  <b>데이터 생명주기</b><br>
+  <span style="color:#3b82f6">■</span> K-DUO-LINK 앱 (명함OCR·방문·STT) → Supabase 저장<br>
+  <span style="color:#10b981">■</span> SalesEX 웹 (사전영업·견적·입찰·수주) → Supabase<br>
+  <span style="color:#dc2626">━</span> <b>수주확정</b> → ERP 전송 (erp_code 부여)<br>
+  <span style="color:#f59e0b">■</span> 전자결재 (출고의뢰·설계의뢰·현장이관) → 그룹웨어<br>
+  <span style="color:#6b7280">■</span> 운영 (생산·출고·회수·세금계산서·수금) → ERP 조회
+</div>
+
+<!-- ===== AREA BOXES ===== -->
+<div class="area-box" style="left:20px;top:40px;width:880px;height:240px"></div>
+<div class="area-label" style="left:30px;top:46px">1. 기초 마스터 (수주 전 — Supabase)</div>
+
+<div class="area-box" style="left:20px;top:300px;width:880px;height:220px"></div>
+<div class="area-label" style="left:30px;top:306px">2. 현장 & 영업활동</div>
+
+<div class="area-box" style="left:20px;top:540px;width:880px;height:260px"></div>
+<div class="area-label" style="left:30px;top:546px">3. 사전영업 & 현설</div>
+
+<div class="area-box" style="left:20px;top:820px;width:880px;height:260px"></div>
+<div class="area-label" style="left:30px;top:826px">4. 견적관리</div>
+
+<div class="area-box" style="left:20px;top:1100px;width:880px;height:240px"></div>
+<div class="area-label" style="left:30px;top:1106px">5. 입찰관리</div>
+
+<div class="area-box" style="left:20px;top:1360px;width:1380px;height:250px"></div>
+<div class="area-label" style="left:30px;top:1366px">6. 수주관리 (핵심) — 수주확정 = ERP 연동점</div>
+
+<div class="area-box" style="left:20px;top:1630px;width:880px;height:240px"></div>
+<div class="area-label" style="left:30px;top:1636px">7. 채권관리 (수주 후)</div>
+
+<div class="area-box" style="left:20px;top:1890px;width:880px;height:240px"></div>
+<div class="area-label" style="left:30px;top:1896px">8. 정산 & 보고</div>
+
+<div class="area-box" style="left:930px;top:540px;width:450px;height:260px"></div>
+<div class="area-label" style="left:940px;top:546px">경쟁사 (독립)</div>
+
+<div class="area-box" style="left:930px;top:1630px;width:450px;height:500px"></div>
+<div class="area-label" style="left:940px;top:1636px">공통 & ERP VIEW</div>
+
+<!-- ===== LIFECYCLE BADGES ===== -->
+<div class="lifecycle-badge badge-pre" style="left:810px;top:46px">수주 전</div>
+<div class="lifecycle-badge badge-post" style="left:810px;top:1366px">수주 확정</div>
+<div class="lifecycle-badge badge-erp" style="left:810px;top:1636px">수주 후</div>
+
+<!-- ===== ROW 1: 기초 마스터 ===== -->
+
+<div class="tbl" style="left:30px;top:70px;width:200px">
+  <div class="tbl-header shared">profiles</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">→ auth.users(id)</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">name, email</span><span class="col-type">TEXT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">team</span><span class="col-type">sales|design</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">role</span><span class="col-type">member|leader|admin</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">employee_id, team_id</span><span class="col-type">TEXT</span></div>
+  </div>
+</div>
+
+<div class="tbl" style="left:260px;top:70px;width:220px">
+  <div class="tbl-header shared">companies</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">name</span><span class="col-type">TEXT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">business_reg_number</span><span class="col-type">TEXT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">credit_rating</span><span class="col-type">A/B/C/D</span></div>
+    <div class="col-row" style="background:#eff6ff"><span class="col-icon"></span><span class="col-name">erp_company_code</span><span class="col-type">VARCHAR</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name" style="font-size:9px;color:#6b7280">NULL=수주전 / 값=ERP등록</span></div>
+  </div>
+</div>
+
+<div class="tbl" style="left:510px;top:70px;width:200px">
+  <div class="tbl-header shared">contacts</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">company_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">user_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">name, position</span><span class="col-type">TEXT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">phone, email</span><span class="col-type">TEXT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">tag</span><span class="col-type">본사|현장|기타</span></div>
+  </div>
+</div>
+
+<div class="tbl" style="left:740px;top:70px;width:150px">
+  <div class="tbl-header ex">business_plans</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">user_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">year, month</span><span class="col-type">INT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">target_order</span><span class="col-type">BIGINT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">target_sales</span><span class="col-type">BIGINT</span></div>
+  </div>
+</div>
+
+<!-- ===== ROW 2: 현장 & 영업활동 ===== -->
+
+<div class="tbl" style="left:30px;top:320px;width:230px">
+  <div class="tbl-header shared">projects</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">company_id (시공사)</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">owner_company_id (발주처)</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">assigned_sales_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">name, type, region</span><span class="col-type">TEXT</span></div>
+    <div class="col-row" style="background:#eff6ff"><span class="col-icon"></span><span class="col-name">erp_site_code</span><span class="col-type">VARCHAR</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name" style="font-size:9px;color:#6b7280">NULL=수주전 / 값=ERP등록</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">status</span><span class="col-type">active|erp|closed</span></div>
+  </div>
+</div>
+
+<div class="tbl" style="left:290px;top:320px;width:220px">
+  <div class="tbl-header shared">meeting_logs</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">project_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">contact_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">user_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">meeting_type, date</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">recording_text</span><span class="col-type">STT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">summary_result</span><span class="col-type">수주|검토|실패</span></div>
+  </div>
+</div>
+
+<div class="tbl" style="left:540px;top:340px;width:190px">
+  <div class="tbl-header shared">meeting_log_action_items</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">log_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">seq_no</span><span class="col-type">INT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">description</span><span class="col-type">TEXT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">status</span><span class="col-type">pending|done</span></div>
+  </div>
+</div>
+
+<!-- ===== ROW 3: 사전영업 & 현설 ===== -->
+
+<div class="tbl" style="left:30px;top:570px;width:210px">
+  <div class="tbl-header ex">pre_sales</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">project_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">company_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">user_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">winning_probability</span><span class="col-type">NUMERIC</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">strategy</span><span class="col-type">TEXT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">status</span><span class="col-type">TEXT</span></div>
+  </div>
+</div>
+
+<div class="tbl" style="left:270px;top:570px;width:200px">
+  <div class="tbl-header ex">site_briefings</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">project_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">attendee_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">contact_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">briefing_date</span><span class="col-type">DATE</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">expected_quantity</span><span class="col-type">BIGINT</span></div>
+  </div>
+</div>
+
+<!-- Competitors -->
+<div class="tbl" style="left:940px;top:570px;width:190px">
+  <div class="tbl-header ex">competitors</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">company_name</span><span class="col-type">VARCHAR</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">strengths</span><span class="col-type">TEXT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">weaknesses</span><span class="col-type">TEXT</span></div>
+  </div>
+</div>
+
+<div class="tbl" style="left:1160px;top:570px;width:190px">
+  <div class="tbl-header ex">competitor_assets</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">competitor_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">asset_type</span><span class="col-type">알폼|갱폼|...</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">quantity</span><span class="col-type">INT</span></div>
+  </div>
+</div>
+
+<!-- ===== ROW 4: 견적관리 ===== -->
+
+<div class="tbl" style="left:30px;top:850px;width:210px">
+  <div class="tbl-header ex">quotes</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">project_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">company_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">user_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">quote_no</span><span class="col-type">VARCHAR</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">version_no</span><span class="col-type">INT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">quote_amount</span><span class="col-type">BIGINT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">status</span><span class="col-type">작성중|제출|승인</span></div>
+  </div>
+</div>
+
+<div class="tbl" style="left:270px;top:860px;width:200px">
+  <div class="tbl-header ex">quote_items</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">quote_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">product_name</span><span class="col-type">VARCHAR</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">quantity, unit_price</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">amount</span><span class="col-type">BIGINT</span></div>
+  </div>
+</div>
+
+<div class="tbl" style="left:500px;top:860px;width:200px">
+  <div class="tbl-header ex">quote_costs</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">quote_id</span><span class="col-type">UUID (1:1)</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">manufacturing_cost</span><span class="col-type">BIGINT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">logistics_cost</span><span class="col-type">BIGINT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">expected_margin</span><span class="col-type">NUMERIC</span></div>
+  </div>
+</div>
+
+<!-- ===== ROW 5: 입찰관리 ===== -->
+
+<div class="tbl" style="left:30px;top:1120px;width:210px">
+  <div class="tbl-header ex">bids</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">project_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">quote_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">user_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">bid_round</span><span class="col-type">INT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">bid_amount</span><span class="col-type">BIGINT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">status</span><span class="col-type">예정|낙찰|탈락</span></div>
+  </div>
+</div>
+
+<div class="tbl" style="left:270px;top:1130px;width:200px">
+  <div class="tbl-header ex">bid_histories</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">bid_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">round_no</span><span class="col-type">INT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">bid_amount</span><span class="col-type">BIGINT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">result</span><span class="col-type">낙찰|탈락|보류</span></div>
+  </div>
+</div>
+
+<!-- ===== ROW 6: 수주관리 (핵심) ===== -->
+
+<div class="tbl" style="left:30px;top:1380px;width:250px">
+  <div class="tbl-header ex" style="background:#059669;font-size:12px">★ orders (핵심 · ERP 연동점)</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">project_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">company_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">quote_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">bid_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">user_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">order_no</span><span class="col-type">VARCHAR</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">order_amount</span><span class="col-type">BIGINT</span></div>
+    <div class="col-row" style="background:#fef3c7"><span class="col-icon"></span><span class="col-name">erp_transfer_yn</span><span class="col-type">BOOL</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">status</span><span class="col-type">협의중→ERP완료</span></div>
+  </div>
+</div>
+
+<div class="tbl" style="left:310px;top:1390px;width:200px">
+  <div class="tbl-header ex">order_items</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">order_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">product_name</span><span class="col-type">VARCHAR</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">quantity, unit_price</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">amount</span><span class="col-type">BIGINT</span></div>
+  </div>
+</div>
+
+<div class="tbl" style="left:540px;top:1390px;width:220px">
+  <div class="tbl-header ex">order_confirmations</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">order_id</span><span class="col-type">UUID (1:1)</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">simulation_data</span><span class="col-type">JSONB</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">form_depreciation</span><span class="col-type">JSONB</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">rental_info</span><span class="col-type">JSONB</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">status</span><span class="col-type">작성중|검토|확정</span></div>
+  </div>
+</div>
+
+<!-- approval_tracking -->
+<div class="tbl" style="left:790px;top:1380px;width:250px">
+  <div class="tbl-header approval">approval_tracking (전자결재 추적)</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">order_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">project_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">approval_type</span><span class="col-type">출고|설계|이관</span></div>
+    <div class="col-row" style="background:#fef9c3"><span class="col-icon"></span><span class="col-name">approval_status</span><span class="col-type">미발행|발행|승인</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">approval_no</span><span class="col-type">VARCHAR</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name" style="font-size:9px;color:#92400e">양식은 그룹웨어 · 상태만 추적</span></div>
+  </div>
+</div>
+
+<!-- ===== ROW 7: 채권관리 ===== -->
+
+<div class="tbl" style="left:30px;top:1660px;width:200px">
+  <div class="tbl-header ex">claims</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">order_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">project_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">progress_rate</span><span class="col-type">NUMERIC</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">claim_amount</span><span class="col-type">BIGINT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">status</span><span class="col-type">미발행|발행|완료</span></div>
+  </div>
+</div>
+
+<div class="tbl" style="left:260px;top:1660px;width:210px">
+  <div class="tbl-header ex">receivables</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">order_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">project_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">contract_amount</span><span class="col-type">BIGINT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">outstanding_amount</span><span class="col-type">BIGINT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">risk_level</span><span class="col-type">정상|주의|위험</span></div>
+  </div>
+</div>
+
+<div class="tbl" style="left:500px;top:1660px;width:210px">
+  <div class="tbl-header ex">guarantees</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">order_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">party_a_company_id</span><span class="col-type">갑(원청)</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">party_b_company_id</span><span class="col-type">을(형틀)</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">party_c_company_id</span><span class="col-type">병(금강)</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">guarantee_amount</span><span class="col-type">BIGINT</span></div>
+  </div>
+</div>
+
+<!-- ===== ROW 8: 정산 & 보고 ===== -->
+
+<div class="tbl" style="left:30px;top:1920px;width:210px">
+  <div class="tbl-header ex">settlements</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">order_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">project_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">settlement_type</span><span class="col-type">요청|기안|실물량</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">settlement_amount</span><span class="col-type">BIGINT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">loss_amount</span><span class="col-type">BIGINT</span></div>
+  </div>
+</div>
+
+<div class="tbl" style="left:270px;top:1920px;width:190px">
+  <div class="tbl-header ex">weekly_reports</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">user_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">team</span><span class="col-type">VARCHAR</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">year, week_no</span><span class="col-type">INT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">status</span><span class="col-type">작성중|제출|확인</span></div>
+  </div>
+</div>
+
+<div class="tbl" style="left:490px;top:1920px;width:190px">
+  <div class="tbl-header ex">weekly_report_items</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">report_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">project_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">activity_type</span><span class="col-type">VARCHAR</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">amount</span><span class="col-type">BIGINT</span></div>
+  </div>
+</div>
+
+<!-- ===== 공통 & ERP ===== -->
+
+<div class="tbl" style="left:940px;top:1660px;width:200px">
+  <div class="tbl-header ex">attachments</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">entity_type</span><span class="col-type">VARCHAR</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">entity_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">uploaded_by</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">file_name, file_url</span></div>
+  </div>
+</div>
+
+<div class="tbl" style="left:1170px;top:1660px;width:190px">
+  <div class="tbl-header ex">kpi_snapshots</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon pk">PK</span><span class="col-name">id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon fk">FK</span><span class="col-name">user_id</span><span class="col-type">UUID</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">snapshot_date</span><span class="col-type">DATE</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">order_amount</span><span class="col-type">BIGINT</span></div>
+    <div class="col-row"><span class="col-icon"></span><span class="col-name">win_rate</span><span class="col-type">NUMERIC</span></div>
+  </div>
+</div>
+
+<!-- ERP Views -->
+<div class="tbl" style="left:940px;top:1920px;width:420px">
+  <div class="tbl-header erp">ERP 조회용 VIEW (읽기 전용 · API 호출)</div>
+  <div class="tbl-body">
+    <div class="col-row"><span class="col-icon" style="color:#6b7280">V</span><span class="col-name"><b>vw_production_status</b> — 생산현황</span><span class="col-type">현장/품목/상태</span></div>
+    <div class="col-row"><span class="col-icon" style="color:#6b7280">V</span><span class="col-name"><b>vw_delivery_status</b> — 출고현황</span><span class="col-type">현장/품목/상태</span></div>
+    <div class="col-row"><span class="col-icon" style="color:#6b7280">V</span><span class="col-name"><b>vw_return_status</b> — 회수현황</span><span class="col-type">현장/품목/상태</span></div>
+    <div class="col-row"><span class="col-icon" style="color:#6b7280">V</span><span class="col-name"><b>vw_inventory_status</b> — 임대현황</span><span class="col-type">품목/재고</span></div>
+    <div class="col-row"><span class="col-icon" style="color:#6b7280">V</span><span class="col-name"><b>vw_tax_invoice_status</b> — 세금계산서</span><span class="col-type">현장/금액</span></div>
+    <div class="col-row"><span class="col-icon" style="color:#6b7280">V</span><span class="col-name"><b>vw_collection_status</b> — 수금현황</span><span class="col-type">현장/금액</span></div>
+  </div>
+</div>
+
+<!-- ===== PROCESS FLOW ARROW ===== -->
+<div style="position:absolute;left:770px;top:90px;width:20px;height:1770px">
+  <svg width="20" height="1770" xmlns="http://www.w3.org/2000/svg">
+    <line x1="10" y1="0" x2="10" y2="1740" stroke="#d1d5db" stroke-width="2" stroke-dasharray="8,4"/>
+    <polygon points="5,1740 15,1740 10,1765" fill="#d1d5db"/>
+  </svg>
+</div>
+
+<div class="info-badge">SalesEX ERD v2.0 rev.1 | 25 Tables + 6 ERP Views | 3원구조: Supabase·ERP·그룹웨어 | 2026-06-15</div>
+
+</div>
+</div>
+
+<script>
+let currentZoom = 0.7;
+const canvas = document.getElementById('canvas');
+function setZoom(level) {
+  currentZoom = level;
+  canvas.style.transform = `scale(${level})`;
+}
+setZoom(0.7);
+const wrapper = document.getElementById('canvas-wrapper');
+let isDragging = false, startX, startY, scrollLeft, scrollTop;
+wrapper.addEventListener('mousedown', e => {
+  if (e.target.closest('.tbl') || e.target.closest('button')) return;
+  isDragging = true;
+  startX = e.pageX - wrapper.offsetLeft;
+  startY = e.pageY - wrapper.offsetTop;
+  scrollLeft = wrapper.scrollLeft;
+  scrollTop = wrapper.scrollTop;
+});
+wrapper.addEventListener('mouseleave', () => isDragging = false);
+wrapper.addEventListener('mouseup', () => isDragging = false);
+wrapper.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  e.preventDefault();
+  wrapper.scrollLeft = scrollLeft - (e.pageX - wrapper.offsetLeft - startX);
+  wrapper.scrollTop = scrollTop - (e.pageY - wrapper.offsetTop - startY);
+});
+wrapper.addEventListener('wheel', e => {
+  if (!e.ctrlKey) return;
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? -0.1 : 0.1;
+  setZoom(Math.max(0.3, Math.min(1.5, currentZoom + delta)));
+}, { passive: false });
+</script>
+</body>
+</html>

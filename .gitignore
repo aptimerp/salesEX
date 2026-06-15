@@ -48,7 +48,11 @@ Thumbs.db
 
 # === 대용량 참고 자료 (GitHub 제외, 로컬만 보관) ===
 업무절차서/
-Work_Procedure_Manual/
+Work_Procedure_Manual/**
+!Work_Procedure_Manual/스키마&데이터흐름/
+!Work_Procedure_Manual/스키마&데이터흐름/# SalesEX ERD 정의서 v2.0.md
+!Work_Procedure_Manual/스키마&데이터흐름/SalesEX_ERD_v2.0.html
+!Work_Procedure_Manual/스키마&데이터흐름/# SalesEX 웹페이지-ERD 매핑.md
 CRM/
 노션/
 스타일가이드/

@@ -143,9 +143,29 @@
   - 기성청구서는 건설사별 양식 상이 → 핵심 데이터만 웹 관리, 원본은 엑셀 다운로드
   - 수주확정보고서 VBA 로직 → 웹 전환 시 시뮬레이션 엔진 분석 필요
 
+## Phase 2 — ERD 설계 & 웹페이지 매핑 ✅
+- 시작일: 2026-06-15
+- 완료일: 2026-06-15
+- 산출물:
+  - `Work_Procedure_Manual/스키마&데이터흐름/# SalesEX ERD 정의서 v2.0.md` — 25개 테이블 + 6개 ERP VIEW 전체 정의
+  - `Work_Procedure_Manual/스키마&데이터흐름/SalesEX_ERD_v2.0.html` — 인터랙티브 ERD 도식 (색상코딩·줌·드래그)
+  - `Work_Procedure_Manual/스키마&데이터흐름/# SalesEX 웹페이지-ERD 매핑.md` — 메뉴별 테이블·CRUD·데이터소스 매핑
+- 핵심 결과:
+  - K-DUO-LINK Supabase 스키마 완전 분석 (gh CLI 원격 읽기, 로컬 클론 없이)
+  - 3원 시스템 경계 확정: Supabase(수주전) / ERP(수주후) / 그룹웨어(전자결재)
+  - 전자결재 대상 업무 식별 → approval_tracking 테이블로 상태만 추적
+  - ERP 연계 필드 설계: companies.erp_company_code, projects.erp_site_code (NULL=수주전)
+  - 웹페이지 ~42개 매핑 완료 (Supabase CRUD 25 + 전자결재추적 4 + ERP조회 7 + 집계 6)
+  - 개발 우선순위 4단계 제안: 핵심파이프라인 → 수주후관리 → 보고분석 → ERP연동
+- 핵심 결정:
+  - users/sites/activities → profiles/projects/meeting_logs (K-DUO-LINK 기존 테이블명 유지)
+  - delivery_requests/design_requests/site_transfers 삭제 → approval_tracking으로 통합
+  - 기성청구서 건설사별 양식 → 핵심 데이터만 웹, 양식은 엑셀 다운로드
+  - 수주확정보고서 VBA 10시트 → JSONB 컬럼으로 웹 시뮬레이션
+  - 메뉴 추가: 영업관리>주간보고, 수주관리>전자결재현황, 채권관리>정산
+
 ## 다음 단계
-🔜 공통 업무 15개 → 웹페이지 항목 매핑 (Phase 2 진입)
-- 각 업무별 CRUD 화면 정의 (입력 폼 / 조회 목록 / 상세 보기)
-- 즉시 웹화 7개 우선 설계 → 데이터 통합 4개 → 건설사별 대응 4개 순서
-- Backend 결정 선행: NestJS vs Vercel API Routes
-- 4단계 타임라인: Stage 1(3주) → Stage 2(4주) → Stage 3(8주) → Stage 4(10주)
+🔜 Phase 3 — 화면 설계 & 프로토타입 (또는 Backend 결정 후 구현 시작)
+- Backend 결정 선행 필요: NestJS vs Vercel API Routes
+- 인증 방식 확정 필요: Supabase Auth (SAC 합의 대기)
+- 미완료: git commit + push (Phase 1.5 + Phase 2 산출물)
